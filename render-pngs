@@ -1,5 +1,24 @@
 #!/bin/bash
 
+
+# ======================================
+# Intro
+# ======================================
+echo ""
+echo "Usage: render-pngs [ARGS]"
+echo ""
+echo "Args:"
+echo "  -i  Icon size"
+echo "  -c  Colors"
+echo "  -d  PNG destination"
+echo "  -q  Do not notify when complete"
+echo ""
+echo "Example: render-pngs -i 32 -c '444444 555555 666666' -d ./.conky-vision-icons -q TRUE"
+echo ""
+echo "NOTE: Please ensure a multi-color array is specified in 'quotes', as per above example."
+echo ""
+
+
 # ======================================
 # ANSI
 # ======================================
@@ -31,13 +50,36 @@ default_size="32"
 # ======================================
 # User Input
 # ======================================
+# Only do this if no command-line arguments have been specified
+while getopts ":i:c:d:q:" opt; do
+        case $opt in
+                i) icon_size="$OPTARG"
+                ;;
+                c) icon_colors="$OPTARG"
+                ;;
+                d) png_dest="$OPTARG"
+                ;;
+                q) quiet="$OPTARG"
+                ;;
+        esac
+done
+
 echo
 
-echo -e "${bold}Enter icon icon_size (skip for default): ${ansi_reset}"
-read -r icon_size
+# Check to see if the user has specified an icon size and colors as command-line arguments
+# If they haven't, carry on as the original script intended i.e. prompt for the values
+# Or allow the user to accept the default values
+if [ -z "$icon_size" ]
+then
+    echo -e "${bold}Enter icon icon_size (skip for default): ${ansi_reset}"
+    read -r icon_size
+fi
 
-echo -e "${bold}Enter 1 or more colors (space or tab separated): ${ansi_reset}"
-read -r -a icon_colors
+if [ -z "$icon_colors" ]
+then
+    echo -e "${bold}Enter 1 or more colors (space or tab separated): ${ansi_reset}"
+    read -r -a icon_colors
+fi
 
 
 # ======================================
@@ -109,8 +151,12 @@ done
 
 
 # If notify-send installed, send notif
-hash notify-send 2>/dev/null &&
-notify-send -i 'terminal' \
-            -a 'Terminal' \
-            'Terminal'    \
-            'Finished rendering icons!'
+# Only do this if the user has set to -q to anything but TRUE
+if [ ! "$quiet" == "TRUE" ]
+then
+    hash notify-send 2>/dev/null &&
+    notify-send -i 'terminal' \
+                -a 'Terminal' \
+                            'Terminal'    \
+                            'Finished rendering icons!'
+fi
